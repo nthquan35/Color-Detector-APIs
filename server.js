@@ -16,13 +16,12 @@ const db = knex({
 
 
 const app = express();
+app.use(express.static('public'))
 app.use(bodyParser.json());
 app.use(cors());
 
 
-app.get('/', (req, res) => {
-	res.send('it is working')	
-})
+app.get('/', (req, res) =>{res.send('it is working')})
 
 app.post('/signin', (req, res) => {
 	db.select('email', 'hash').from('login')
