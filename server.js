@@ -112,7 +112,7 @@ app.put('/image', (req, res) => {
 //     // res = false
 // });
 
-app.listen(3000, () => {
+app.listen(process.env.PORT, () => {
 	console.log(`Sucess!!! on port ${process.env.PORT}`);
 });
 
