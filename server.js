@@ -116,7 +116,7 @@ app.put('/image', (req, res) => {
 // });
 
 app.listen(3000, () => {
-	console.log('Sucess!!!');
+	console.log(`Sucess!!! on port ${process.env.PORT}`);
 });
 
 /* Things to do before starting coding
