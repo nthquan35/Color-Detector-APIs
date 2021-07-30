@@ -2,22 +2,38 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt-nodejs');
 const cors = require('cors');
-const knex = require('knex');
+// const knex = require('knex');
+const { Pool } = require('pg');
 
-const db = knex({
-	client: 'pg',
-	connection: {
-		connectionString: process.env.DATABASE_URL,
-		ssl: true
-	}
+// const db = knex({
+// 	client: 'pg',
+// 	connection: {
+// 		connectionString: process.env.DATABASE_URL,
+// 		ssl: true
+// 	}
+// });
+
+const pool = new Pool({
+	user: process.env.DB_USER || 'colordetector',
+	host: process.env.DB_ADDRESS || 'localhost',
+	database: process.env.DB_NAME || 'userinfo',
+	password: process.env.DB_PASSWORD || '123456',
 });
 
+pool.connect((err, client, release) => {
+  if (err) {
+	return console.error('Error acquiring client', err.stack)
+  }
+  else {
+	console.log("Connected!");
+  }
+});
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-
+/*
 app.get('/', (req, res) =>{res.send('it is working')})
 
 app.post('/signin', (req, res) => {
@@ -98,7 +114,7 @@ app.put('/image', (req, res) => {
 	.catch(err => res.status(400).json('unable to get entries'))
 })
 
-
+*/
 
 // // Load hash from your password DB.
 // bcrypt.compare("bacon", hash, function(err, res) {
@@ -108,8 +124,8 @@ app.put('/image', (req, res) => {
 //     // res = false
 // });
 
-app.listen(process.env.PORT || 3000, () => {
-	console.log(`Sucess!!! on port ${process.env.PORT}`);
+app.listen(process.env.PORT || 3001, () => {
+	console.log(`Sucess!!! on port 3001`);
 });
 
 /* Things to do before starting coding

@@ -2,7 +2,7 @@
   "name": "Project-APIs",
   "version": "1.0.0",
   "description": "",
-  "main": "script.js",
+  "main": "server.js",
   "scripts": {
     "start": "nodemon server.js"
   },
@@ -14,8 +14,8 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "knex": "^0.21.1",
-    "nodemon": "^2.0.3",
-    "pg": "^8.0.3"
+    "knex": "^0.21.19",
+    "nodemon": "^2.0.12",
+    "pg": "^8.7.1"
   }
 }
