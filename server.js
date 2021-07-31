@@ -32,6 +32,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', (req, res) =>{
+	console.log(process.env);
 	res.send('it is working')
 });
 
