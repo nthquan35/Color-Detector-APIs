@@ -5,6 +5,12 @@ const cors = require('cors');
 // const knex = require('knex');
 const { Pool } = require('pg');
 
+/*
+	- Get Heroku CLI
+	- Connect with process.env 
+	- Commit to Heroku
+*/
+
 // const db = knex({
 // 	client: 'pg',
 // 	connection: {
@@ -20,112 +26,127 @@ const pool = new Pool({
 	password: process.env.DB_PASSWORD || '123456',
 });
 
-pool.connect((err, client, release) => {
-  if (err) {
-	return console.error('Error acquiring client', err.stack)
-  }
-  else {
-	console.log("Connected!");
-  }
-});
-
 const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-/*
-app.get('/', (req, res) =>{res.send('it is working')})
+app.get('/', (req, res) =>{
+	res.send('it is working')
+});
+
 
 app.post('/signin', (req, res) => {
-	db.select('email', 'hash').from('login')
-	.where('email', '=', req.body.email)
-	.then(data => {
-		if(data.length){
-			const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
+	const query = {
+		text:
+			'SELECT email, hash FROM login WHERE email = $1',
+		values:
+			[req.body.email],
+	};
+	pool.query(query, (err, results) => {
+		if (err) {
+			res.status(400).json('Unable to get user!');
+		} else if (results.rows.length < 1) {
+			res.status(200).json('Wrong credential!');
+		} else {
+			const isValid = bcrypt.compareSync(req.body.password, results.rows[0].hash);
 			if (isValid){
-				return db.select('*').from('users')
-				.where('email', '=', req.body.email)
-				.then(user => {
-					res.json(user[0]);
+				const secondQuery = {
+					text: 'SELECT * FROM users WHERE email = $1',
+					values: [req.body.email],
+				};
+				pool.query(secondQuery, (err, secondResults) => {
+					if (err) {
+						res.status(400).json('Unable to get user!');
+					} else if (secondResults.rows.length < 1){
+						res.status(200).json('Wrong credential!');
+					} 
+					else {
+						//console.log(secondResults.rows[0]);
+						res.json(secondResults.rows[0]);
+					}
 				})
-				.catch(err => res.status(400).json('Unable to get user.'))
 			}
 		}
-		else{
-			res.status(200).json('Wrong credential!');
-		}
 	})
-	.catch(err => res.status(400).json('Wrong credential.'))
 })
 
 app.post('/signup', (req, res) => {
-	const {email, name, password} = req.body;
+	const { email, name, password } = req.body;
 	const hash = bcrypt.hashSync(password);
-	res.json('This is working without any problem');
-	// db.transaction(trx => {
-	// 	trx.insert({
-	// 		hash: hash,
-	// 		email: email
-	// 	})
-	// 	.into('login')
-	// 	.returning('email')
-	// 	.then(loginEmail => {
-	// 		return trx('users')
-	// 		.returning('*')
-	// 		.insert({
-	// 			email: loginEmail[0],
-	// 			name: name,
-	// 			joined: new Date()
-	// 		})
-	// 		.then(user => {
-	// 			res.json(user[0]);
-	// 		})
-	// 	})
-	// 	.then(trx.commit)
-	// 	.catch(trx.rollback)
-	// })
-	// .catch(err => res.status(400).json('unable to register.'))
-})
+	const joinedDate = new Date();
+	//res.json('This is working without any problem');
+
+	const loginQuery = {
+		text:
+			'INSERT INTO login(email, hash) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *',
+		values:
+			[email, hash],
+	};
+	pool.query(loginQuery, (error, results) =>{
+		if (error) {
+			res.status(400).json('unable to register.');
+		} else if (results.rows.length < 1) {
+			res.status(200).json('Email is already existed! Please use another email.');	
+		} else {
+			const usersQuery = {
+				text: 'INSERT INTO users(name, email, joined) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *',
+				values: [name, email, joinedDate],
+			};
+				pool.query(usersQuery, (err, userResults) => {
+				if (err) {
+					console.log(err.stack);
+					res.status(400).json('Unable to register.');
+				} else if (userResults.rows.length < 1) {
+					res.status(400).json('Email is already existed! Please use another email.');	
+				} else {
+					res.status(200).json('Registered Successfully!');
+				}	
+			});
+		}
+	});
+});
+
 
 app.get('/profile/:id', (req, res) => {
 	const {id} = req.params;
-	db.select('*').from('users').where({
-		id: id
-	})
-	.then(user => {
-		if(user.length){
-			res.json(user[0])
+	//console.log(req.params);
+	const query = {
+		text : 'SELECT * FROM users WHERE id = $1',
+		values: [id],
+	};
+	pool.query(query, (err, results) => {
+		if (err){
+			res.status(400).json('ID does not exist!');
+		} else if (results.rows.length < 1) {
+			res.status(400).json('ID does not exist!');	
+		} else {
+			res.json(results.rows[0]);
 		}
-		else{
-			res.status(400).json('NOT FOUND!!!')
-		}
 	})
-	.catch(err => res.status(400).json('not found!!!'))
-})
+});
 
 app.put('/image', (req, res) => {
 	const {id} = req.body;
-	db('users').where('id', '=', id)
-	.increment('entries', 1)
-	.returning('entries')
-	.then(entries => {
-		res.json(entries[0]);
-	})
-	.catch(err => res.status(400).json('unable to get entries'))
+	
+	const query = {
+		text: 'UPDATE users SET entries = entries + 1 WHERE id = $1 RETURNING entries',
+		values: [id]
+	};
+
+	pool.query(query, (err, results) => {
+		if (err){
+			res.status(400).json('Unable to get entries!');
+		} else {
+			res.json(results.rows[0]);
+		}
+	});
 })
 
-*/
 
-// // Load hash from your password DB.
-// bcrypt.compare("bacon", hash, function(err, res) {
-//     // res == true
-// });
-// bcrypt.compare("veggies", hash, function(err, res) {
-//     // res = false
-// });
-
-app.listen(process.env.PORT || 3001, () => {
-	console.log(`Sucess!!! on port 3001`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+	console.log(`Sucess!!! on port ${PORT}...`);
 });
 
 /* Things to do before starting coding
