@@ -11,13 +11,16 @@ const { Pool } = require('pg');
 	- Commit to Heroku
 */
 
-// const db = knex({
-// 	client: 'pg',
-// 	connection: {
-// 		connectionString: process.env.DATABASE_URL,
-// 		ssl: true
-// 	}
-// });
+const corsOptions = {
+    origin: '*',
+    methods: ['POST', 'GET', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors(corsOptions));
 
 const pool = new Pool({
 	/*
@@ -32,10 +35,6 @@ const pool = new Pool({
 	}
 });
 
-const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(cors());
 
 app.get('/', (req, res) =>{
 	//console.log(process.env);
