@@ -20,10 +20,16 @@ const { Pool } = require('pg');
 // });
 
 const pool = new Pool({
+	/*
 	user: process.env.DB_USER || 'colordetector',
 	host: process.env.DB_ADDRESS || 'localhost',
 	database: process.env.DB_NAME || 'userinfo',
 	password: process.env.DB_PASSWORD || '123456',
+	*/
+	connectionString: process.env.DATABASE_URL,
+  	ssl: {
+    	rejectUnauthorized: false
+	}
 });
 
 const app = express();
@@ -32,7 +38,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', (req, res) =>{
-	console.log(process.env);
+	//console.log(process.env);
 	res.send('it is working')
 });
 
