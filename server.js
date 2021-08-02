@@ -13,7 +13,7 @@ const { Pool } = require('pg');
 
 const corsOptions = {
     origin: '*',
-    methods: ['POST', 'GET', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }
 
@@ -23,16 +23,17 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 
 const pool = new Pool({
-	/*
 	user: process.env.DB_USER || 'colordetector',
 	host: process.env.DB_ADDRESS || 'localhost',
 	database: process.env.DB_NAME || 'userinfo',
 	password: process.env.DB_PASSWORD || '123456',
-	*/
+	
+	/*
 	connectionString: process.env.DATABASE_URL,
   	ssl: {
     	rejectUnauthorized: false
 	}
+	*/
 });
 
 
@@ -134,7 +135,6 @@ app.get('/profile/:id', (req, res) => {
 
 app.put('/image', (req, res) => {
 	const {id} = req.body;
-	
 	const query = {
 		text: 'UPDATE users SET entries = entries + 1 WHERE id = $1 RETURNING entries',
 		values: [id]
@@ -142,8 +142,10 @@ app.put('/image', (req, res) => {
 
 	pool.query(query, (err, results) => {
 		if (err){
+			console.log(err.stack);
 			res.status(400).json('Unable to get entries!');
 		} else {
+			//console.log(results.rows[0]);
 			res.json(results.rows[0]);
 		}
 	});
