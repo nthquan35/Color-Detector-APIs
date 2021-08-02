@@ -23,17 +23,17 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 
 const pool = new Pool({
+		/*
 	user: process.env.DB_USER || 'colordetector',
 	host: process.env.DB_ADDRESS || 'localhost',
 	database: process.env.DB_NAME || 'userinfo',
 	password: process.env.DB_PASSWORD || '123456',
-	
-	/*
+	*/
 	connectionString: process.env.DATABASE_URL,
   	ssl: {
     	rejectUnauthorized: false
 	}
-	*/
+
 });
 
 
